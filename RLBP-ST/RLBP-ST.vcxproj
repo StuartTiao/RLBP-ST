@@ -122,6 +122,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="RLBP-ST.cpp" />
+    <ClCompile Include="RLBP.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RLBP.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

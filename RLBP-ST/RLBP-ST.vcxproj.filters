@@ -18,5 +18,13 @@
     <ClCompile Include="RLBP-ST.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RLBP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RLBP.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
