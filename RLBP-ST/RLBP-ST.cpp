@@ -39,8 +39,13 @@ int main(int argc, char** argv)
 	}
 
 	//LBP
-	std::vector<unsigned char> LBPHist;
+	std::vector<float> LBPHist;
 	LBP((unsigned char*)inImg.data, inImg.cols, inImg.rows,inImg.step, LBPHist);
+	
+	float sum = 0.0f;
+	std::for_each(LBPHist.begin(),LBPHist.end(),[&sum](float h){sum+=h;});
+	if(abs(sum - 1.0f) > 0.0001f)
+		return -1;
 
 	//RLBP LOOKUP
 	std::vector<std::vector<unsigned char> > H2RHLkup;
@@ -58,10 +63,11 @@ int main(int argc, char** argv)
 		if (outf.good())
 		{
 			outf << "RH_Bin, Frequency" << std::endl;
-			for (int bi = 0; bi < RH.size(); bi++)
+			outf.unsetf(std::ios::floatfield);
+			outf.precision(5);
+			for (auto bf : RH)
 			{
-				auto bf = RH.at(bi);
-				outf << int(bf.first) << bf.second << std::endl;
+				outf << int(bf.first) <<", "<< bf.second << std::endl;
 			}
 		}
 		outf.close();

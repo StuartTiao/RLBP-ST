@@ -15,11 +15,12 @@
  *  @param      std::vector<unsigned char> & LBPHist
  *  @return     void
  */
-void LBP(unsigned char* pArr, int width, int height, int nStepByte, std::vector<unsigned char>& LBPHist)
+void LBP(unsigned char* pArr, int width, int height, int nStepByte, std::vector<float>& LBPHist)
 {
 	if(!pArr) 
 		return;
-	LBPHist = std::vector<unsigned char>(256,0);
+	LBPHist = std::vector<float>(256,0.0f);
+	float nTotal = float(width*height);
 
 	int sb = nStepByte;
 
@@ -32,15 +33,15 @@ void LBP(unsigned char* pArr, int width, int height, int nStepByte, std::vector<
 			int jm = std::max(0, j-1);				//j-1
 			int jp = std::min(height-1, j+1);		//j+1
 
-			unsigned char lbp =  ((pArr[im	+	jm*sb]	>= pArr[i+j*sb])?1:0)		+ 
-								  (((pArr[i	+	jm*sb]	>= pArr[i+j*sb])?1:0) << 1)	+
+			unsigned char lbp =  ((pArr[im		+	jm*sb]	>= pArr[i+j*sb])?1:0)		+ 
+								  (((pArr[i		+	jm*sb]	>= pArr[i+j*sb])?1:0) << 1)	+
 								  (((pArr[ip	+	jm*sb]	>= pArr[i+j*sb])?1:0) << 2)	+
 								  (((pArr[ip	+	j*sb]	>= pArr[i+j*sb])?1:0) << 3)	+
 								  (((pArr[ip	+	jp*sb]	>= pArr[i+j*sb])?1:0) << 4)	+
-								  (((pArr[i	+	jp*sb]	>= pArr[i+j*sb])?1:0) << 5)	+
+								  (((pArr[i		+	jp*sb]	>= pArr[i+j*sb])?1:0) << 5)	+
 								  (((pArr[im	+	jp*sb]	>= pArr[i+j*sb])?1:0) << 6)	+
 								  (((pArr[im	+	j*sb]	>= pArr[i+j*sb])?1:0) << 7);	
-			LBPHist[lbp]++;						
+			LBPHist[lbp] += 1.0f/nTotal;						
 		}
 	}
 	
@@ -55,57 +56,81 @@ void LBP(unsigned char* pArr, int width, int height, int nStepByte, std::vector<
  */
 void ProduceRLBPLookUp(std::vector<std::vector<unsigned char> >& H2RHLkup)
 {
-	lkup1 = std::vector<unsigned char>(256, 0);
-	lkup2 = std::vector<unsigned char>(256, 0);
-
 	int m1 = 0x02;	//010
 	int m2 = 0x05;	//101
 	int m3 = 0x07;	//111
 	for(int i = 0; i<256; i++)
 	{
-		int m = i;
-		for(int s = 0; s < 8-2; s++)
+		H2RHLkup.push_back(std::vector<unsigned char>());
+		std::vector<unsigned char>& RHVec = H2RHLkup.back();
+		if(IsUniformBP(i))
 		{
-			m = (i ^ (m1 << s)) & (m3 << s);	//check 010
-			if(m == 0)
+			RHVec.push_back(i+1);
+		}
+		else		//map non-uniform
+		{
+			//replace 010 then 101
+			int m = i;
+			for(int s = 0; s < 8-2; s++)
 			{
-				m = i ^ (m1 << s);	//toggle middle bit
-			}		
+				if(((m ^ (m1 << s)) & (m3 << s)) == 0)	//check 010
+				{
+					m = m ^ (m1 << s);	//toggle middle bit
+				}
+			}
+			for (int s = 0; s < 8 - 2; s++)
+			{
+				if (((m ^ (m2 << s)) & (m3 << s)) == 0)	//check 010
+				{
+					m = m ^ (m1 << s);	//toggle middle bit
+				}
+			}
+			if(IsUniformBP(m))
+			{
+				RHVec.push_back(m+1);
+			}
+			else
+			{
+				RHVec.push_back(0);
+			}
+
+			//replace 101 then 010
+			int mm = i;
+			for (int s = 0; s < 8 - 2; s++)
+			{
+				if (((mm ^ (m2 << s)) & (m3 << s)) == 0)	//check 101
+				{
+					mm = mm ^ (m1 << s);	//toggle middle bit
+				}
+			}
+
+			for (int s = 0; s < 8 - 2; s++)
+			{
+				if (((mm ^ (m1 << s)) & (m3 << s)) == 0)	//check 010
+				{
+					mm = mm ^ (m1 << s);	//toggle middle bit
+				}
+			}
+			if(mm != m)
+			{
+				if (IsUniformBP(mm))
+				{
+					RHVec.push_back(mm + 1);
+				}
+				else
+				{
+					RHVec.push_back(0);
+				}
+			}
+
+
+
 		}
 
-		for (int s = 0; s < 8 - 2; s++)
-		{
-			m = (i ^ (m2 << s)) & (m3 << s);	//check 101
-			if (m == 0)
-			{
-				m = i ^ (m1 << s);	//toggle middle bit
-			}
-		}
-		lkup1[i] = m;
+
+
 	}
 
-	for (int i = 0; i < 256; i++)
-	{
-		int m = i;
-		for (int s = 0; s < 8 - 2; s++)
-		{
-			m = (i ^ (m2 << s)) & (m3 << s);	//check 101
-			if (m == 0)
-			{
-				m = i ^ (m1 << s); //toggle middle bit
-			}
-		}
-
-		for (int s = 0; s < 8 - 2; s++)
-		{
-			m = (i ^ (m1 << s)) & (m3 << s);	//check 010
-			if (m == 0)
-			{
-				m = i ^ (m1 << s); //toggle middle bit
-			}
-		}
-		lkup2[i] = m;
-	}
 
 }
 
@@ -114,29 +139,25 @@ bool IsUniformBP(unsigned char bp)
 	int cnt = 0;
 	while(bp>0)
 	{
-		if((bp&0x03^0x02 == 0)		//check 010
-		|| (bp&0x03^0x05 == 0))		//check 101
+		if(((bp^0x01)&0x03) == 0		//check 01
+		|| ((bp^0x02)&0x03) == 0)		//check 10
 			cnt++;
-		bp>>1;
+		bp = bp>>1;
 	}
 
 	return (cnt < 3);
 }
 
 void MapH2RH(const std::vector<std::vector<unsigned char> >& H2RHLkup,
-			std::vector<unsigned char>& LBPHist,
+			std::vector<float>& LBPHist,
 			std::map<unsigned char, float>& RH)
 {
 	for(int i = 0; i<256; i++)
 	{
 		auto rhvec = H2RHLkup.at(i);
-		if(rhvec.size() == 1)	//uniform LBP and non-uniform LBP
+		for(auto rh : rhvec)
 		{
-			RH[i] += LBPHist[i]; 
-		}
-		if(rhvec.size() > 1)						//one-to-many RLBP mapping
-		{
-
+			RH[rh] += LBPHist[i]/rhvec.size();
 		}
 	}
 }

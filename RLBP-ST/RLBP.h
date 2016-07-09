@@ -5,14 +5,14 @@
 #include <map>
 
 
-void LBP(unsigned char* pArr, int width, int height, int nStepByte, std::vector<unsigned char>& LBPHist);
+void LBP(unsigned char* pArr, int width, int height, int nStepByte, std::vector<float>& LBPHist);
 
 void ProduceRLBPLookUp(std::vector<std::vector<unsigned char> >& H2RHLkup);
 
 bool IsUniformBP(unsigned char bp);
 
 void MapH2RH(const std::vector<std::vector<unsigned char> >& H2RHLkup, 
-			std::vector<unsigned char>& LBPHist,
+			std::vector<float>& LBPHist,
 			std::map<unsigned char, float>& RH);
 
 
